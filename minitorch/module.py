@@ -31,13 +31,21 @@ class Module:
 
     def train(self) -> None:
         "Set the mode of this module and all descendent modules to `train`."
-        # TODO: Implement for Task 0.4.
-        raise NotImplementedError('Need to implement for Task 0.4')
+        def _helper(cur_module: Module):
+            cur_module.training = True
+            for mod in cur_module._modules.values():
+                _helper(mod)
+
+        _helper(self)
 
     def eval(self) -> None:
         "Set the mode of this module and all descendent modules to `eval`."
-        # TODO: Implement for Task 0.4.
-        raise NotImplementedError('Need to implement for Task 0.4')
+        def _helper(cur_module: Module):
+            cur_module.training = False
+            for mod in cur_module._modules.values():
+                _helper(mod)
+
+        _helper(self)
 
     def named_parameters(self) -> Sequence[Tuple[str, Parameter]]:
         """
@@ -47,13 +55,31 @@ class Module:
         Returns:
             The name and `Parameter` of each ancestor parameter.
         """
-        # TODO: Implement for Task 0.4.
-        raise NotImplementedError('Need to implement for Task 0.4')
+        ret = []
+        def _helper(cur_module: Module, name: str):
+            prefix = name + '.' if name else ''
+            for k, v in cur_module._parameters.items():
+                ret.append((prefix + k, v))
+            for k, v in cur_module._modules.items():
+                _helper(v, prefix + k)
+        
+        _helper(self, '')
+        
+        print(f'this is ret: {ret}')
+        return ret
 
     def parameters(self) -> Sequence[Parameter]:
         "Enumerate over all the parameters of this module and its descendents."
-        # TODO: Implement for Task 0.4.
-        raise NotImplementedError('Need to implement for Task 0.4')
+        ret = []
+        def _helper(cur_module: Module):
+            for para in cur_module.__dict__['_parameters'].values():
+                ret.append(para)
+            for mod in cur_module.__dict__['_modules'].values():
+                _helper(mod)
+
+        _helper(self)
+
+        return ret
 
     def add_parameter(self, k: str, v: Any) -> Parameter:
         """
