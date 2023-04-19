@@ -12,22 +12,24 @@ from typing import Callable, Iterable
 
 def mul(x: float, y: float) -> float:
     "$f(x, y) = x * y$"
-    return x * y
+    return x * y * 1.0
 
 
 def id(x: float) -> float:
     "$f(x) = x$"
-    return x
+    return x * 1.0
 
 
 def add(x: float, y: float) -> float:
     "$f(x, y) = x + y$"
+    x = x * 1.0
+    y = y * 1.0
     return x + y
 
 
 def neg(x: float) -> float:
     "$f(x) = -x$"
-    return -x
+    return -1.0 * x
 
 
 def lt(x: float, y: float) -> float:
@@ -42,12 +44,14 @@ def eq(x: float, y: float) -> float:
 
 def max(x: float, y: float) -> float:
     "$f(x) =$ x if x is greater than y else y"
+    x = x * 1.0
+    y = y * 1.0
     return x if x > y else y
 
 
 def is_close(x: float, y: float) -> float:
     "$f(x) = |x - y| < 1e-2$"
-    return 1 if abs(x - y) < 1e-2 else 0
+    return 1.0 if abs(x - y) < 1e-2 else 0.0
 
 
 def sigmoid(x: float) -> float:
@@ -74,7 +78,7 @@ def relu(x: float) -> float:
 
     (See https://en.wikipedia.org/wiki/Rectifier_(neural_networks) .)
     """
-    return x if x > 0 else 0
+    return x * 1.0 if x > 0 else 0.0
 
 
 EPS = 1e-6
@@ -107,7 +111,7 @@ def inv_back(x: float, d: float) -> float:
 
 def relu_back(x: float, d: float) -> float:
     r"If $f = relu$ compute $d \times f'(x)$"
-    return d if x > 0 else 0
+    return d * 1.0 if x > 0 else 0.0
 
 
 # ## Task 0.3
@@ -199,10 +203,10 @@ def reduce(
 
 def sum(ls: Iterable[float]) -> float:
     "Sum up a list using `reduce` and `add`."
-    return reduce(add, 0)(ls)
+    return reduce(add, 0.0)(ls)
 
 
 def prod(ls: Iterable[float]) -> float:
     "Product of a list using `reduce` and `mul`."
-    return reduce(mul, 1)(ls)
+    return reduce(mul, 1.0)(ls)
 

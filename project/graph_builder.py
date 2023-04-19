@@ -1,11 +1,12 @@
 import networkx as nx
 
+from minitorch import Scalar
 import minitorch
 
-if hasattr(minitorch, "Scalar"):
-    Scalar = minitorch.Scalar
-else:
-    Scalar = None
+# if hasattr(minitorch, "Scalar"):
+#     Scalar = minitorch.Scalar
+# else:
+#     Scalar = None
 
 
 def build_expression(code):
