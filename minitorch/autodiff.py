@@ -65,8 +65,27 @@ def topological_sort(variable: Variable) -> Iterable[Variable]:
     Returns:
         Non-constant Variables in topological order starting from the right.
     """
-    # TODO: Implement for Task 1.4.
-    raise NotImplementedError('Need to implement for Task 1.4')
+    ret = []
+    visited = []
+    temp_mark = []
+    def visit(cur_var: Variable):
+        if cur_var.is_constant():
+            return
+        if cur_var.unique_id in visited:
+            return
+        if cur_var.unique_id in temp_mark:
+            raise RuntimeError('Not an DAG!')
+        temp_mark.append(cur_var.unique_id)
+        if not cur_var.is_leaf():
+            for parent in cur_var.parents:
+                visit(parent)
+        
+        temp_mark.remove(cur_var.unique_id)
+        visited.append(cur_var.unique_id)
+        ret.insert(0, cur_var)
+
+    visit(variable)
+    return ret
 
 
 def backpropagate(variable: Variable, deriv: Any) -> None:
@@ -80,8 +99,17 @@ def backpropagate(variable: Variable, deriv: Any) -> None:
 
     No return. Should write to its results to the derivative values of each leaf through `accumulate_derivative`.
     """
-    # TODO: Implement for Task 1.4.
-    raise NotImplementedError('Need to implement for Task 1.4')
+    topo_result: Iterable[Variable] = topological_sort(variable)
+    derivs = {variable.unique_id: deriv}
+    for cur_var in topo_result:
+        d_out = derivs[cur_var.unique_id]
+        if cur_var.is_leaf():
+            cur_var.accumulate_derivative(d_out)
+        else:
+            for inp, d in cur_var.chain_rule(d_out):
+                if inp.unique_id not in derivs.keys():
+                    derivs[inp.unique_id] = 0.0
+                derivs[inp.unique_id] += d
 
 
 @dataclass

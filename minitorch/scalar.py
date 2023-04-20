@@ -140,7 +140,7 @@ class Scalar:
         Should only be called during autodifferentiation on leaf variables.
 
         Args:
-            x: value to be accumulated
+            x: value to be accumulatedScalarFunction
         """
         assert self.is_leaf(), "Only leaf variables can have derivatives."
         if self.derivative is None:
@@ -165,8 +165,8 @@ class Scalar:
         assert h.last_fn is not None
         assert h.ctx is not None
 
-        # TODO: Implement for Task 1.3.
-        raise NotImplementedError('Need to implement for Task 1.3')
+        derivative = h.last_fn._backward(h.ctx, d_output)
+        return [(inp, d) for inp, d in zip(h.inputs, derivative) if not inp.is_constant()]
 
     def backward(self, d_output: Optional[float] = None) -> None:
         """

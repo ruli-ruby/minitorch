@@ -103,8 +103,7 @@ class Mul(ScalarFunction):
 
     @staticmethod
     def forward(ctx: Context, a: float, b: float) -> float:
-        ctx.save_for_backward(a)
-        ctx.save_for_backward(b)
+        ctx.save_for_backward(a, b)
         return a * b
 
     @staticmethod
