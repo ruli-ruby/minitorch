@@ -24,7 +24,8 @@ def test_create(t1: List[float]) -> None:
 @pytest.mark.task2_3
 @pytest.mark.parametrize("fn", one_arg)
 def test_one_args(
-    fn: Tuple[str, Callable[[float], float], Callable[[Tensor], Tensor]], t1: Tensor
+    fn: Tuple[str, Callable[[float], float], Callable[[Tensor], Tensor]],
+    t1: Tensor
 ) -> None:
     "Test one-arg functions compared to floats"
     name, base_fn, tensor_fn = fn

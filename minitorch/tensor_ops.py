@@ -79,11 +79,13 @@ class TensorBackend:
         self.add_zip = ops.zip(operators.add)
         self.mul_zip = ops.zip(operators.mul)
         self.lt_zip = ops.zip(operators.lt)
+        self.gt_zip = ops.zip(operators.gt)
         self.eq_zip = ops.zip(operators.eq)
         self.is_close_zip = ops.zip(operators.is_close)
         self.relu_back_zip = ops.zip(operators.relu_back)
         self.log_back_zip = ops.zip(operators.log_back)
         self.inv_back_zip = ops.zip(operators.inv_back)
+        self.sigmoiod_back_zip = ops.zip(operators.sigmoid_back)
 
         # Reduce
         self.add_reduce = ops.reduce(operators.add, 0.0)
@@ -264,8 +266,21 @@ def tensor_map(
         in_shape: Shape,
         in_strides: Strides,
     ) -> None:
-        # TODO: Implement for Task 2.3.
-        raise NotImplementedError('Need to implement for Task 2.3')
+        assert len(in_shape) <= len(out_shape)
+        in_shape_l = list(in_shape)
+        out_shape_l = list(out_shape)
+        while len(in_shape_l) < len(out_shape_l):
+            in_shape_l.insert(0, 1)
+        for in_shape_dim, out_shape_dim in zip(in_shape_l, out_shape_l):
+            assert in_shape_dim <= out_shape_dim
+        out_index = np.array(out_shape, dtype=int)
+        in_index = np.array(in_shape, dtype=int)
+        for i in range(len(out)):
+            to_index(i, out_shape, out_index)
+            broadcast_index(out_index, out_shape, in_shape, in_index)
+            data = in_storage[index_to_position(in_index, in_strides)]
+            fn_result = fn(data)
+            out[index_to_position(out_index, out_strides)] = fn_result
 
     return _map
 
@@ -309,8 +324,20 @@ def tensor_zip(
         b_shape: Shape,
         b_strides: Strides,
     ) -> None:
-        # TODO: Implement for Task 2.3.
-        raise NotImplementedError('Need to implement for Task 2.3')
+        out_index = np.array(out_shape, dtype=int)
+        a_index = np.array(a_shape, dtype=int)
+        b_index = np.array(b_shape, dtype=int)
+        for i, _ in enumerate(out):
+            to_index(i, out_shape, out_index)
+            # broadcast a
+            broadcast_index(out_index, out_shape, a_shape, a_index)
+            a_data = a_storage[index_to_position(a_index, a_strides)]
+            # broadcast b
+            broadcast_index(out_index, out_shape, b_shape, b_index)
+            b_data = b_storage[index_to_position(b_index, b_strides)]
+            # compute and store
+            fn_result = fn(a_data, b_data)
+            out[index_to_position(out_index, out_strides)] = fn_result
 
     return _zip
 
@@ -340,8 +367,15 @@ def tensor_reduce(
         a_strides: Strides,
         reduce_dim: int,
     ) -> None:
-        # TODO: Implement for Task 2.3.
-        raise NotImplementedError('Need to implement for Task 2.3')
+        out_index = np.array(out_shape, dtype=int)
+        for i, _ in enumerate(out):
+            to_index(i, out_shape, out_index)
+            out_pos = index_to_position(out_index, out_strides)
+            for j in range(a_shape[reduce_dim]):
+                a_index = out_index.copy()
+                a_index[reduce_dim] = j
+                a_pos = index_to_position(a_index, a_strides)
+                out[out_pos] = fn(out[out_pos], a_storage[a_pos])
 
     return _reduce
 
