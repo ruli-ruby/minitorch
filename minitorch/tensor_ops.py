@@ -45,7 +45,7 @@ class TensorOps:
 
     @staticmethod
     def matrix_multiply(a: Tensor, b: Tensor) -> Tensor:
-        raise NotImplementedError("Not implemented in this assignment")
+        pass
 
     cuda = False
 
@@ -273,8 +273,8 @@ def tensor_map(
             in_shape_l.insert(0, 1)
         for in_shape_dim, out_shape_dim in zip(in_shape_l, out_shape_l):
             assert in_shape_dim <= out_shape_dim
-        out_index = np.array(out_shape, dtype=int)
-        in_index = np.array(in_shape, dtype=int)
+        out_index = np.array(out_shape, dtype=np.int32)
+        in_index = np.array(in_shape, dtype=np.int32)
         for i in range(len(out)):
             to_index(i, out_shape, out_index)
             broadcast_index(out_index, out_shape, in_shape, in_index)
@@ -324,9 +324,9 @@ def tensor_zip(
         b_shape: Shape,
         b_strides: Strides,
     ) -> None:
-        out_index = np.array(out_shape, dtype=int)
-        a_index = np.array(a_shape, dtype=int)
-        b_index = np.array(b_shape, dtype=int)
+        out_index = np.array(out_shape, dtype=np.int32)
+        a_index = np.array(a_shape, dtype=np.int32)
+        b_index = np.array(b_shape, dtype=np.int32)
         for i, _ in enumerate(out):
             to_index(i, out_shape, out_index)
             # broadcast a
@@ -367,7 +367,7 @@ def tensor_reduce(
         a_strides: Strides,
         reduce_dim: int,
     ) -> None:
-        out_index = np.array(out_shape, dtype=int)
+        out_index = np.array(out_shape, dtype=np.int32)
         for i, _ in enumerate(out):
             to_index(i, out_shape, out_index)
             out_pos = index_to_position(out_index, out_strides)
