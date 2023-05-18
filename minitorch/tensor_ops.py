@@ -266,13 +266,13 @@ def tensor_map(
         in_shape: Shape,
         in_strides: Strides,
     ) -> None:
-        assert len(in_shape) <= len(out_shape)
-        in_shape_l = list(in_shape)
-        out_shape_l = list(out_shape)
-        while len(in_shape_l) < len(out_shape_l):
-            in_shape_l.insert(0, 1)
-        for in_shape_dim, out_shape_dim in zip(in_shape_l, out_shape_l):
-            assert in_shape_dim <= out_shape_dim
+        # assert len(in_shape) <= len(out_shape)
+        # in_shape_l = list(in_shape)
+        # out_shape_l = list(out_shape)
+        # while len(in_shape_l) < len(out_shape_l):
+        #     in_shape_l.insert(0, 1)
+        # for in_shape_dim, out_shape_dim in zip(in_shape_l, out_shape_l):
+        #     assert in_shape_dim <= out_shape_dim
         out_index = np.array(out_shape, dtype=np.int32)
         in_index = np.array(in_shape, dtype=np.int32)
         for i in range(len(out)):
