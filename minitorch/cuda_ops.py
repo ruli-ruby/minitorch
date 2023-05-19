@@ -298,31 +298,31 @@ def tensor_reduce(
         reduce_value: float,
     ) -> None:
         BLOCK_DIM = 1024
-        cache = cuda.shared.array(BLOCK_DIM, numba.float64) # type: ignore
-        out_index = cuda.local.array(MAX_DIMS, numba.int32) # type: ignore
-        out_pos = cuda.blockIdx.x
-        a_index = cuda.local.array(MAX_DIMS, numba.int32) # type: ignore
-        pos = cuda.threadIdx.x
-        tid = pos
+        shared = cuda.shared.array(BLOCK_DIM, numba.float64) # type: ignore
+        tid = cuda.threadIdx.x
+        reduce_dim_size = a_shape[reduce_dim]
 
-        i = cuda.blockIdx.x * cuda.blockDim.x + cuda.threadIdx.x # type: ignore
-            
-        if i < a_storage.size:
-            to_index(i, a_shape, a_index) # type: ignore
-            a_pos = index_to_position(a_index, a_strides) # type: ignore
-            cache[tid] = a_storage[a_pos] # type: ignore
-        else:
-            cache[tid] = 0.0 # type: ignore
+        if tid >= reduce_dim_size:
+            shared[tid] = reduce_value # type: ignore
         cuda.syncthreads()
-        stri = cuda.blockDim.x // 2 # type: ignore
-        while stri > 0:
-            if tid < stri:
-                cache[tid] += cache[tid + stri] # type: ignore
+
+        if tid < reduce_dim_size:
+            out_index = cuda.local.array(MAX_DIMS, numba.int32) # type: ignore
+            to_index(cuda.blockIdx.x, out_shape, out_index) # type: ignore
+            out_pos = index_to_position(out_index, out_strides) # type: ignore
+            out_index[reduce_dim] = tid # type: ignore
+            a_pos = index_to_position(out_index, a_strides) # type: ignore
             cuda.syncthreads()
-            stri = stri // 2
-         
-        if tid == 0:
-            pass
+            shared[tid] = a_storage[a_pos] # type: ignore
+            cuda.syncthreads()
+            i = 1
+            while i < reduce_dim_size:
+                cuda.syncthreads()
+                if tid % (i * 2) == 0: # type: ignore
+                    shared[tid] = fn(shared[tid], shared[tid + i]) # type: ignore
+                i = i * 2
+            cuda.syncthreads()
+            out[out_pos] = shared[0] # type: ignore
 
     return cuda.jit()(_reduce)  # type: ignore
 
