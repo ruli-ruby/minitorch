@@ -2,6 +2,7 @@ from typing import Callable, Optional
 
 import numba
 from numba import cuda
+from numpy import half
 
 from .tensor import Tensor
 from .tensor_data import (
@@ -246,12 +247,11 @@ def _sum_practice(out: Storage, a: Storage, size: int) -> None:
         cache[tid] = 0.0 # type: ignore
     cuda.syncthreads()
     stri = cuda.blockDim.x // 2 # type: ignore
-    while size > 1:
-        half = size // 2
+    while stri > 0:
         if tid < stri:
-            cache[tid] += cache[tid + half] # type: ignore
+            cache[tid] += cache[tid + stri] # type: ignore
         cuda.syncthreads()
-        size = half
+        stri = stri // 2
 
     if tid == 0:
         out[cuda.blockIdx.x] = cache[0] # type: ignore
@@ -297,29 +297,32 @@ def tensor_reduce(
         reduce_dim: int,
         reduce_value: float,
     ) -> None:
-        # BLOCK_DIM = 1024
-        # cache = cuda.shared.array(BLOCK_DIM, numba.float64)
-        # out_index = cuda.local.array(MAX_DIMS, numba.int32)
-        # out_pos = cuda.blockIdx.x
-        # pos = cuda.threadIdx.x
-        out_dim = len(out_shape)
-        a_dim = len(a_shape)
-
+        BLOCK_DIM = 1024
+        cache = cuda.shared.array(BLOCK_DIM, numba.float64) # type: ignore
         out_index = cuda.local.array(MAX_DIMS, numba.int32) # type: ignore
+        out_pos = cuda.blockIdx.x
         a_index = cuda.local.array(MAX_DIMS, numba.int32) # type: ignore
-        pos = cuda.blockIdx.x * cuda.gridDim.x + cuda.threadIdx.x # type: ignore
+        pos = cuda.threadIdx.x
+        tid = pos
 
-        if out_size > pos:
-            to_index(pos, out_shape, out_index) # type: ignore
-            reduce_dim_size = a_shape[reduce_dim]
-
-            out[pos] = reduce_value
-            for j in range(reduce_dim_size):
-                to_index(pos, out_shape, a_index) # type: ignore
-                a_index[reduce_dim] = j # type: ignore
-                pos_a = index_to_position(a_index, a_strides) # type: ignore
-                out[pos] = fn(out[pos], a_storage[pos_a]) # type: ignore
-
+        i = cuda.blockIdx.x * cuda.blockDim.x + cuda.threadIdx.x # type: ignore
+            
+        if i < a_storage.size:
+            to_index(i, a_shape, a_index) # type: ignore
+            a_pos = index_to_position(a_index, a_strides) # type: ignore
+            cache[tid] = a_storage[a_pos] # type: ignore
+        else:
+            cache[tid] = 0.0 # type: ignore
+        cuda.syncthreads()
+        stri = cuda.blockDim.x // 2 # type: ignore
+        while stri > 0:
+            if tid < stri:
+                cache[tid] += cache[tid + stri] # type: ignore
+            cuda.syncthreads()
+            stri = stri // 2
+         
+        if tid == 0:
+            pass
 
     return cuda.jit()(_reduce)  # type: ignore
 
